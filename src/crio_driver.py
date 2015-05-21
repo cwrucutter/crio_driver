@@ -65,19 +65,27 @@ class crio_driver(object):
     # Limit the velocity command to 2 m/s
     if self.velocity > 2000:
       self.velocity = 2000
+      rospy.logwarn("Velocity command outside limit (%s m/s). Set to -2 m/s."%msg.linear.x)
     if self.velocity < -2000:
       self.velocity = -2000
+      rospy.logwarn("Velocity command outside limit (%s m/s). Set to -2 m/s."%msg.linear.x)
     # Calculate the checksum
     checksum = (sum(bytearray(struct.pack('<BBBBhhB',170,160,5,1,int(round(self.velocity)),int(round(self.omega)),self.plowAngle))) % 256) & 127
     # Put together the entire serialized packet
     serialMsg = struct.pack('<BBBBhhBBB',170,160,5,1,int(round(self.velocity)),int(round(self.omega)),self.plowAngle,checksum,13)
     # and send the message!
     self.crioSerial.write(serialMsg)
-    print "Sent: ", bytearray(struct.pack('<hhB',int(round(self.velocity)),int(round(self.omega)),self.plowAngle))
 
+    # display sent data to screen
+    # rospy.loginfo("Sent: (%s,%s,%s)",int(round(self.velocity)),int(round(self.omega)),self.plowAngle)
+
+
+  # This function subscribes to the /plow/angle topic and saves the UInt8 as a global variable. This is sent to the cRIO over serial in the vwSubCB function.
   def plowAngleSubCB(self, msg):
     self.plowAngle = msg.data
 
+
+  # This function contains an infinite loop which read from the serial port connected to the cRIO and publishes the status and encoder readings
   def run(self):
     sync0 = '\x00'; sync1 = '\x00';# sync2 = '\x00';
     while not rospy.is_shutdown():
@@ -95,12 +103,12 @@ class crio_driver(object):
       msgLen = struct.unpack('<B',self.crioSerial.read(1))[0]
       msgType = struct.unpack('<B',self.crioSerial.read(1))[0]
       if msgType != 0:
-        rospy.logward("Packet Failed: Message type not correct")
+        rospy.logwarn("Packet Failed: Message type not correct")
         continue
 
       data = self.crioSerial.read(msgLen)
       if (len(data) != msgLen):
-        rospy.loginfo("Packet Failed: Message length unexpected")
+        rospy.logwarn("Packet Failed: Message length unexpected")
         continue
       data1 = struct.unpack("<BBii",data)
 
@@ -108,15 +116,18 @@ class crio_driver(object):
       checksum1 = ((sum((sum(struct.unpack("<BB",sync0+sync1)),msgLen,msgType,sum(struct.unpack("<BBBBBBBBBB",data)))) % 256) & 127)
 
       if checksum != checksum1:
-        rospy.loginfo("Packet Failed: Checksum did not match")
+        rospy.logwarn("Packet Failed: Checksum did not match")
         continue
 
       stop = struct.unpack("<B",self.crioSerial.read(1))[0]
       if stop != 13:
-        rospy.loginfo("Packet Failed: Incorrect stop bit")
+        rospy.logwarn("Packet Failed: Incorrect stop bit")
         continue
+      
+      # TODO: publish data
 
-      print "Recieved: ", struct.unpack('<BBii',data)
+      # display recieved info to screen
+      # rospy.loginfo("Recieved: (%s,%s,%s,%s)",data1[0],data1[1],data1[2],data1[3])
 
 if __name__ == "__main__":
   cd = crio_driver()
