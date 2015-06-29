@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rospy
   std_msgs
+  snowmower_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,6 +109,7 @@ include_directories(
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(crio_driver_node crio_driver_generate_messages_cpp)
+# add_dependencies(crio_driver.py snowmower_msgs_generate_messages_py)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(crio_driver_node

@@ -35,6 +35,7 @@
 import rospy
 from std_msgs.msg import UInt8
 from geometry_msgs.msg import Twist
+from snowmower_msgs.msg import EncMsg
 
 import serial,struct
 
@@ -46,6 +47,9 @@ class crio_driver(object):
     rospy.Subscriber('/plow/angle', UInt8, self.plowAngleSubCB)
     # Listen for a /geometry_msgs/Twist on the topic /cmd_vel
     rospy.Subscriber('/cmd_vel', Twist, self.vwSubCB)
+    # Publish the encoder counts using a snowmower_msgs/EncMsg on the topic enc
+    self.encPub = rospy.Publisher('enc',EncMsg,queue_size=1)
+    self.encMsg = EncMsg()
 
     # Set some parameters for the serial port (port and baudrate)
     crioPort = rospy.get_param('~port','/dev/ttyUSB2')
@@ -124,7 +128,13 @@ class crio_driver(object):
         rospy.logwarn("Packet Failed: Incorrect stop bit")
         continue
       
-      # TODO: publish data
+      # TODO: publish crio status
+      # Populate the encoder message (right and left) with data from the crio
+      self.encMsg.right = data1[2]
+      self.encMsg.left = data1[3]
+      # publish the data
+      self.encPub.publish(encMsg)
+      
 
       # display recieved info to screen
       rospy.loginfo("Recieved: (%s,%s,%s,%s)",data1[0],data1[1],data1[2],data1[3])
