@@ -77,7 +77,7 @@ class crio_driver(object):
     self.crioSerial.write(serialMsg)
 
     # display sent data to screen
-    # rospy.loginfo("Sent: (%s,%s,%s)",int(round(self.velocity)),int(round(self.omega)),self.plowAngle)
+    rospy.loginfo("Sent: (%s,%s,%s)",int(round(self.velocity)),int(round(self.omega)),self.plowAngle)
 
 
   # This function subscribes to the /plow/angle topic and saves the UInt8 as a global variable. This is sent to the cRIO over serial in the vwSubCB function.
@@ -127,7 +127,7 @@ class crio_driver(object):
       # TODO: publish data
 
       # display recieved info to screen
-      # rospy.loginfo("Recieved: (%s,%s,%s,%s)",data1[0],data1[1],data1[2],data1[3])
+      rospy.loginfo("Recieved: (%s,%s,%s,%s)",data1[0],data1[1],data1[2],data1[3])
 
 if __name__ == "__main__":
   cd = crio_driver()
