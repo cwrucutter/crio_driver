@@ -133,7 +133,7 @@ class crio_driver(object):
       self.encMsg.right = data1[2]
       self.encMsg.left = data1[3]
       # publish the data
-      self.encPub.publish(encMsg)
+      self.encPub.publish(self.encMsg)
       
 
       # display recieved info to screen
