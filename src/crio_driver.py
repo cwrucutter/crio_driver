@@ -132,6 +132,8 @@ class crio_driver(object):
       # Populate the encoder message (right and left) with data from the crio
       self.encMsg.right = data1[2]
       self.encMsg.left = data1[3]
+      self.encMsg.header.stamp = rospy.get_rostime()
+      
       # publish the data
       self.encPub.publish(self.encMsg)
       
