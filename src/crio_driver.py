@@ -2,6 +2,7 @@
 #
 # Software License Agreement (BSD License)
 #
+# Copyright (c) 2018, Charles Hart
 # Copyright (c) 2014, Matthew Klein
 # All rights reserved.
 #
@@ -34,6 +35,7 @@
 
 import rospy
 from std_msgs.msg import UInt8
+from std_msgs.msg import Bool
 from geometry_msgs.msg import Twist
 from snowmower_msgs.msg import EncMsg
 
@@ -50,6 +52,15 @@ class crio_driver(object):
     # Publish the encoder counts using a snowmower_msgs/EncMsg on the topic enc
     self.encPub = rospy.Publisher('enc',EncMsg,queue_size=1)
     self.encMsg = EncMsg()
+    
+    # Publish switch panel data as booleans
+    self.swAPub = rospy.Publisher('/switch/A', Bool, queue_size=1)
+    self.swBPub = rospy.Publisher('/switch/B', Bool, queue_size=1)
+    self.swCPub = rospy.Publisher('/switch/C', Bool, queue_size=1)
+    self.swDPub = rospy.Publisher('/switch/D', Bool, queue_size=1)
+
+    # Publish autonomy/stop data as an inscrutible number (54 = all systems go)
+    self.stopPub = rospy.Publisher('/stopState', UInt8, queue_size=1)
 
     # Set some parameters for the serial port (port and baudrate)
     crioPort = rospy.get_param('~port','/dev/ttyUSB2')
@@ -128,7 +139,13 @@ class crio_driver(object):
         rospy.logwarn("Packet Failed: Incorrect stop bit")
         continue
       
-      # TODO: publish crio status
+      # publish switch and stop status
+      self.stopPub.publish(UInt8(data1[0]))
+      self.swAPub.publish(Bool(not(data1[1] & 1)))
+      self.swBPub.publish(Bool(not(data1[1] & 2)))
+      self.swCPub.publish(Bool(not(data1[1] & 4)))
+      self.swDPub.publish(Bool(not(data1[1] & 8)))
+
       # Populate the encoder message (right and left) with data from the crio
       self.encMsg.right = data1[2]
       self.encMsg.left = data1[3]
